@@ -25,6 +25,7 @@
                 <MenuItem.Header>
                     <TextBlock Text="Event Stream" Foreground="White"/>
                 </MenuItem.Header>
+                <MenuItem Header="Edit metadata..." Click="OnEditMetadataButtonClick"/>
                 <MenuItem Header="Set beginning of stream..." Click="OnSoftDeleteAtButtonClick"/>
                 <MenuItem Header="Undo soft-delete..." Click="OnUndoSoftDeleteButtonClick"/>
             </MenuItem>
@@ -71,7 +72,7 @@
             <TextBox Text="{Binding StreamMetadata, Mode=OneWay}" IsReadOnly="True" VerticalAlignment="Center"/>
         </DockPanel>
 
-        <DataGrid Grid.Row="3" ItemsSource="{Binding Events}" AutoGenerateColumns="False"
+        <DataGrid Grid.Row="3" ItemsSource="{Binding Events}" AutoGenerateColumns="False" IsReadOnly="True"
                   VerticalGridLinesBrush="LightGray" HorizontalGridLinesBrush="LightGray" AlternatingRowBackground="#FFF4F4F4">
             <DataGrid.Columns>
                 <DataGridTextColumn Binding="{Binding Number}" Header="#" Width="40" FontWeight="Bold" FontFamily="Consolas" FontSize="14">

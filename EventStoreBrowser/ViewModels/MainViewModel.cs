@@ -3,6 +3,7 @@ using GalaSoft.MvvmLight;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -201,6 +202,27 @@ namespace EventStoreBrowser.ViewModels
                 .Build();
 
             await connection.SetStreamMetadataAsync(_streamName, ExpectedVersion.Any, newMeta);
+        }
+
+        public async Task EditMetadataAsync(Window owner)
+        {
+            var connection = EventStoreConnection.Create(DefaultSettings, new Uri(_connectionUri));
+            await connection.ConnectAsync();
+
+            var metaBytes = await connection.GetStreamMetadataAsRawBytesAsync(_streamName);
+            var meta = Encoding.UTF8.GetString(metaBytes.StreamMetadata);
+
+            var dialog = new MetadataWindow
+            {
+                Owner = owner,
+                MetadataJsonString = meta
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                var newMetaBytes = Encoding.UTF8.GetBytes(dialog.MetadataJsonString);
+                await connection.SetStreamMetadataAsync(_streamName, ExpectedVersion.Any, newMetaBytes);
+            }
         }
     }
 }

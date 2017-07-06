@@ -46,5 +46,14 @@ namespace EventStoreBrowser
             WindowProgressBar.Visibility = Visibility.Collapsed;
             IsEnabled = true;
         }
+
+        private async void OnEditMetadataButtonClick(object sender, RoutedEventArgs e)
+        {
+            IsEnabled = false;
+            WindowProgressBar.Visibility = Visibility.Visible;
+            await ViewModel.EditMetadataAsync(this);
+            WindowProgressBar.Visibility = Visibility.Collapsed;
+            IsEnabled = true;
+        }
     }
 }

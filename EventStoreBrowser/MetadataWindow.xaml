@@ -1,0 +1,33 @@
+﻿<Window x:Class="EventStoreBrowser.MetadataWindow"
+        x:Name="Root"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:EventStoreBrowser"
+        WindowStartupLocation="CenterOwner"
+        mc:Ignorable="d"
+        Title="Edit Metadata"
+        Width="400" Height="300">
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <TextBox Text="{Binding MetadataJsonString, ElementName=Root, Mode=TwoWay}"
+                 AcceptsReturn="True"/>
+
+        <StackPanel Grid.Row="1" Margin="8" Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom"
+                    DockPanel.Dock="Bottom">
+
+            <Button Padding="12,4" Content="Apply" Click="OnApplyButtonClick"/>
+            <Button Padding="12,4" Content="Cancel" Click="OnCancelButtonClick" Margin="8,0,0,0"/>
+            
+        </StackPanel>
+        
+    </Grid>
+</Window>
