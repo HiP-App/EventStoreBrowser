@@ -7,11 +7,13 @@
         mc:Ignorable="d"
         SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
-        Title="Write to..." Height="190" Width="300">
+        Title="Write to..." Height="240" Width="400">
 
     <Border Padding="0,0,0,4" DataContext="{Binding ElementName=Root}">
         <Grid>
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -28,7 +30,7 @@
 
             <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="99" TextWrapping="Wrap" Margin="4">
                 Clicking "Write" will connect to the Event Store at the specified target URI, soft-delete the
-                target stream and append all events currently shown in the main window to the target stream.
+                target stream and append all events of the source stream to the target stream.
                 Note that event IDs cannot be preserved; the copied events will have different IDs.
             </TextBlock>
 
@@ -42,7 +44,15 @@
                      Text="{Binding StreamName, Mode=TwoWay}"
                      VerticalAlignment="Center"/>
 
-            <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="99"
+            <CheckBox x:Name="IncludeEventsBeforeLastSoftDeleteCheckBox" Grid.Row="4" Grid.ColumnSpan="2" Margin="4,8,0,0"
+                      Content="Include events before last soft-delete"
+                      ToolTip="If checked, all events that have ever been written to the source stream are copied over, including events that were soft-deleted."/>
+
+            <CheckBox x:Name="IncludeMetadataCheckBox" Grid.Row="5" Grid.ColumnSpan="2" Margin="4,8,0,0"
+                      Content="Copy metadata"
+                      ToolTip="If checked, custom metadata values from the source stream are copied over to the target stream."/>
+
+            <StackPanel Orientation="Horizontal" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="99"
                         HorizontalAlignment="Right" VerticalAlignment="Bottom"
                         Margin="0,0,4,0">
                 <Button Content="Write" Padding="8,4" Click="OnWriteButtonClick"/>

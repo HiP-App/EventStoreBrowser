@@ -16,7 +16,7 @@ namespace EventStoreBrowser.ViewModels
 
         private string _connectionUri = "tcp://localhost:1113";
         private string _streamName = "develop";
-        private string _streamMetadata = "";
+        private string _metadata = "";
 
         private List<EventViewModel> _events = new List<EventViewModel>
         {
@@ -38,8 +38,8 @@ namespace EventStoreBrowser.ViewModels
 
         public string StreamMetadata
         {
-            get => _streamMetadata;
-            private set => Set(ref _streamMetadata, value);
+            get => _metadata;
+            private set => Set(ref _metadata, value);
         }
 
         public List<EventViewModel> Events
@@ -55,28 +55,12 @@ namespace EventStoreBrowser.ViewModels
                 var connection = EventStoreConnection.Create(DefaultSettings, new Uri(ConnectionUri));
                 await connection.ConnectAsync();
 
-                var meta = await connection.GetStreamMetadataAsync(_streamName);
-                StreamMetadata = meta.StreamMetadata.AsJsonString();
+                StreamMetadata = await connection.GetStreamMetadataJsonAsync(_streamName);
 
-                const int pageSize = 4096; // only 4096 events can be retrieved in one call
-
-                // read all events (from the beginning to the end)
-                var events = new List<EventViewModel>();
-                var start = 0;
-                StreamEventsSlice readResult;
-
-                do
-                {
-                    readResult = connection.ReadStreamEventsForwardAsync(_streamName, start, pageSize, false).Result;
-
-                    foreach (var eventData in readResult.Events)
-                        events.Insert(0, new EventViewModel(eventData.Event));
-
-                    start += pageSize;
-                }
-                while (!readResult.IsEndOfStream);
-
-                Events = events;
+                Events = (await connection.ReadEventsAsync(_streamName))
+                    .Select(ev => new EventViewModel(ev.Event))
+                    .Reverse()
+                    .ToList();
             }
             catch (Exception e)
             {
@@ -96,16 +80,53 @@ namespace EventStoreBrowser.ViewModels
             Clipboard.SetText(s);
         }
 
-        public async Task WriteTo(string targetConnectionUri, string targetStream)
+        public async Task CloneTo(CloneArgs args)
         {
             try
             {
-                var targetConnection = EventStoreConnection.Create(DefaultSettings, new Uri(targetConnectionUri));
+                var sourceConnection = EventStoreConnection.Create(DefaultSettings, new Uri(_connectionUri));
+                var targetConnection = EventStoreConnection.Create(DefaultSettings, new Uri(args.TargetConnectionUri));
+
+                await sourceConnection.ConnectAsync();
                 await targetConnection.ConnectAsync();
 
-                var events = Events.Reverse<EventViewModel>().Select(ev => ev.ToEventData());
-                await targetConnection.DeleteStreamAsync(targetStream, ExpectedVersion.Any);
-                await targetConnection.AppendToStreamAsync(targetStream, ExpectedVersion.Any, events);
+                // 1) Read metadata & events from source
+                var sourceMetadata = await sourceConnection.GetStreamMetadataAsync(_streamName);
+                var targetMetadata = await targetConnection.GetStreamMetadataAsync(args.TargetStreamName);
+
+                var resolvedEvents = args.IncludeEventsBeforeLastSoftDelete
+                    ? await sourceConnection.ReadEventsFromAbsoluteStartAsync(_streamName)
+                    : await sourceConnection.ReadEventsAsync(_streamName);
+
+                var events = resolvedEvents.ToEventData().ToList();
+
+                // 2) Soft-delete target stream
+                await targetConnection.DeleteStreamAsync(args.TargetStreamName, ExpectedVersion.Any);
+
+                // 3) Write metadata & events to target
+                await targetConnection.AppendToStreamAsync(args.TargetStreamName, ExpectedVersion.Any, events);
+
+                // 4) Update target metadata so that $tb corresponds to source's $tb
+                var targetMetadataAfterDeletion = await targetConnection.GetStreamMetadataAsync(args.TargetStreamName);
+
+                var newMetadata = args.IncludeMetadata
+                    ? sourceMetadata.StreamMetadata.Copy()
+                    : targetMetadata.StreamMetadata.Copy();
+                    
+                if (args.IncludeEventsBeforeLastSoftDelete)
+                {
+                    var targetTb =
+                        targetMetadataAfterDeletion.StreamMetadata.TruncateBefore.GetValueOrDefault() +
+                        sourceMetadata.StreamMetadata.TruncateBefore.GetValueOrDefault();
+
+                    newMetadata.SetTruncateBefore(targetTb);
+                }
+                else
+                {
+                    newMetadata.SetTruncateBefore(targetMetadataAfterDeletion.StreamMetadata.TruncateBefore.GetValueOrDefault());
+                }
+                
+                await targetConnection.SetStreamMetadataAsync(args.TargetStreamName, ExpectedVersion.Any, newMetadata);
             }
             catch (Exception e)
             {
@@ -141,31 +162,9 @@ namespace EventStoreBrowser.ViewModels
 
 
             // 2) Read events from 0 to maxEvent
-
-            const int pageSize = 4096; // only 4096 events can be retrieved in one call
-
-            // read all events (from the beginning to the end)
-            var start = 0;
-            StreamEventsSlice readResult;
-
-            var newEvents = new List<EventData>();
-
-            do
-            {
-                readResult = connection.ReadStreamEventsForwardAsync(_streamName, start, pageSize, false).Result;
-
-                var evs = readResult.Events
-                    .Where(e => e.Event.EventNumber < positionOfLastSoftDelete)
-                    .Select(e => new EventData(
-                        Guid.NewGuid(), e.Event.EventType, e.Event.IsJson,
-                        e.Event.Data, e.Event.Metadata));
-
-                newEvents.AddRange(evs);
-
-
-                start += pageSize;
-            }
-            while (!readResult.IsEndOfStream);
+            var newEvents = (await connection.ReadEventsAsync(_streamName, positionOfLastSoftDelete.GetValueOrDefault() - 1))
+                .ToEventData()
+                .ToList();
 
             // 3) Soft-delete stream
             await connection.DeleteStreamAsync(_streamName, ExpectedVersion.Any);
@@ -209,8 +208,7 @@ namespace EventStoreBrowser.ViewModels
             var connection = EventStoreConnection.Create(DefaultSettings, new Uri(_connectionUri));
             await connection.ConnectAsync();
 
-            var metaBytes = await connection.GetStreamMetadataAsRawBytesAsync(_streamName);
-            var meta = Encoding.UTF8.GetString(metaBytes.StreamMetadata);
+            var meta = await connection.GetStreamMetadataJsonAsync(_streamName);
 
             var dialog = new MetadataWindow
             {
@@ -220,8 +218,7 @@ namespace EventStoreBrowser.ViewModels
 
             if (dialog.ShowDialog() == true)
             {
-                var newMetaBytes = Encoding.UTF8.GetBytes(dialog.MetadataJsonString);
-                await connection.SetStreamMetadataAsync(_streamName, ExpectedVersion.Any, newMetaBytes);
+                await connection.SetStreamMetadataJsonAsync(_streamName, dialog.MetadataJsonString);
             }
         }
     }

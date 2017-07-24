@@ -12,7 +12,7 @@ namespace EventStoreBrowser
         public static readonly DependencyProperty StreamNameProperty =
             DependencyProperty.Register(nameof(StreamName), typeof(string), typeof(WriteToDialog), new PropertyMetadata("develop"));
 
-        private Func<string, string, Task> _callback;
+        private Func<CloneArgs, Task> _callback;
 
         public string ConnectionUri
         {
@@ -31,7 +31,7 @@ namespace EventStoreBrowser
             InitializeComponent();
         }
 
-        public static bool ShowNew(Window owner, Func<string, string, Task> callback)
+        public static bool ShowNew(Window owner, Func<CloneArgs, Task> callback)
         {
             var dialog = new WriteToDialog { _callback = callback, Owner = owner };
             dialog.ShowDialog();
@@ -42,7 +42,16 @@ namespace EventStoreBrowser
         {
             IsEnabled = false;
             WindowProgressBar.Visibility = Visibility.Visible;
-            await _callback(ConnectionUri, StreamName);
+
+            var args = new CloneArgs
+            {
+                TargetConnectionUri = ConnectionUri,
+                TargetStreamName = StreamName,
+                IncludeEventsBeforeLastSoftDelete = IncludeEventsBeforeLastSoftDeleteCheckBox.IsChecked.GetValueOrDefault(),
+                IncludeMetadata = IncludeMetadataCheckBox.IsChecked.GetValueOrDefault()
+            };
+
+            await _callback(args);
             DialogResult = true;
             Close();
         }
@@ -52,5 +61,13 @@ namespace EventStoreBrowser
             DialogResult = false;
             Close();
         }
+    }
+
+    public class CloneArgs
+    {
+        public string TargetConnectionUri { get; set; }
+        public string TargetStreamName { get; set; }
+        public bool IncludeEventsBeforeLastSoftDelete { get; set; }
+        public bool IncludeMetadata { get; set; }
     }
 }

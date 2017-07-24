@@ -25,6 +25,7 @@
                 <MenuItem.Header>
                     <TextBlock Text="Event Stream" Foreground="White"/>
                 </MenuItem.Header>
+                <MenuItem Header="Clone stream to..." Click="OnCloneButtonClick"/>
                 <MenuItem Header="Edit metadata..." Click="OnEditMetadataButtonClick"/>
                 <MenuItem Header="Set beginning of stream..." Click="OnSoftDeleteAtButtonClick"/>
                 <MenuItem Header="Undo soft-delete..." Click="OnUndoSoftDeleteButtonClick"/>
@@ -56,14 +57,10 @@
                 <Button Margin="8,0,0,0" Padding="8,4"
                         Content="Connect"
                         Click="OnConnectButtonClick"/>
-                
+
                 <Button Margin="8,0,0,0" Padding="8,4"
                         Content="Copy"
                         Click="OnCopyButtonClick"/>
-
-                <Button Margin="8,0,0,0" Padding="8,4"
-                        Content="Write to..."
-                        Click="OnWriteToButtonClick"/>
             </StackPanel>
         </Border>
 

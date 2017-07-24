@@ -85,6 +85,7 @@
     <Compile Include="MetadataWindow.xaml.cs">
       <DependentUpon>MetadataWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ViewModels\EventStoreConnectionExtensions.cs" />
     <Compile Include="ViewModels\EventViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="WriteToDialog.xaml.cs">

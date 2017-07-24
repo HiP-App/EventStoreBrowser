@@ -24,9 +24,9 @@ namespace EventStoreBrowser
 
         private void OnCopyButtonClick(object sender, RoutedEventArgs e) => ViewModel.CopyToClipboard();
 
-        private void OnWriteToButtonClick(object sender, RoutedEventArgs e)
+        private void OnCloneButtonClick(object sender, RoutedEventArgs e)
         {
-            WriteToDialog.ShowNew(this, ViewModel.WriteTo);
+            WriteToDialog.ShowNew(this, ViewModel.CloneTo);
         }
 
         private async void OnUndoSoftDeleteButtonClick(object sender, RoutedEventArgs e)
