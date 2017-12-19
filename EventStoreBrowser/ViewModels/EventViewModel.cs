@@ -45,6 +45,10 @@ namespace EventStoreBrowser.ViewModels
 
             dynamic parsedJson = JsonConvert.DeserializeObject(Encoding.UTF8.GetString(ev.Data));
             Data = JsonConvert.SerializeObject(parsedJson, Formatting.Indented);
+
+            parsedJson = JsonConvert.DeserializeObject(Encoding.UTF8.GetString(ev.Metadata));
+            Metadata = JsonConvert.SerializeObject(parsedJson, Formatting.Indented);
+
         }
 
         public EventData ToEventData()
