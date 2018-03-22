@@ -1,5 +1,7 @@
 ﻿using EventStoreBrowser.ViewModels;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace EventStoreBrowser
 {
@@ -14,6 +16,20 @@ namespace EventStoreBrowser
         }
 
         private async void OnConnectButtonClick(object sender, RoutedEventArgs e)
+        {
+            await ConnectAndRead();
+        }
+        private async void TextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                //explicitly update Text property binding
+                (sender as TextBox).GetBindingExpression(TextBox.TextProperty).UpdateSource();
+                await ConnectAndRead();
+            }
+        }
+
+        private async System.Threading.Tasks.Task ConnectAndRead()
         {
             IsEnabled = false;
             WindowProgressBar.Visibility = Visibility.Visible;
@@ -55,5 +71,6 @@ namespace EventStoreBrowser
             WindowProgressBar.Visibility = Visibility.Collapsed;
             IsEnabled = true;
         }
+
     }
 }

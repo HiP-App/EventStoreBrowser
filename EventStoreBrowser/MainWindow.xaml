@@ -48,11 +48,13 @@
             <StackPanel Orientation="Horizontal">
                 <TextBox Text="{Binding ConnectionUri, Mode=TwoWay}"
                          VerticalContentAlignment="Center"
-                         Width="300"/>
+                         Width="300" 
+                         KeyDown="TextBox_KeyDown"/>
 
                 <TextBox Margin="8,0,0,0" Width="100"
                          VerticalContentAlignment="Center"
-                         Text="{Binding StreamName, Mode=TwoWay}"/>
+                         Text="{Binding StreamName, Mode=TwoWay}"
+                         KeyDown="TextBox_KeyDown"/>
 
                 <Button Margin="8,0,0,0" Padding="8,4"
                         Content="Connect"
